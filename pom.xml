@@ -14,8 +14,13 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.7</maven.compiler.source>
-    <maven.compiler.target>1.7</maven.compiler.target>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
+    <maven-failsafe-plugin.version>2.18.1</maven-failsafe-plugin.version>
+    <skipTests>false</skipTests>
+    <skipUTs>${skipTests}</skipUTs>
+    <skipITs>${skipTests}</skipITs>
   </properties>
 
   <dependencies>
@@ -28,6 +33,73 @@
   </dependencies>
 
   <build>
+
+  <plugins>
+
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-shade-plugin</artifactId>
+      <version>1.4</version>
+      <executions>
+        <execution>
+          <phase>package</phase>
+          <goals>
+            <goal>shade</goal>
+          </goals>
+          <configuration>
+            <transformers>
+              <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <mainClass>com.example.App</mainClass>
+              </transformer>
+            </transformers>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+
+    <!-- maven-surefire-plugin is designed for running unit tests and if any of the tests fail then it will fail the build immediately.
+         The maven surefire plugin is called implicitly by the maven lifecycle in the appropriate phase so it is a ‘special’ plugin.
+         We don´t need to define it inside pom.xml it will be downloaded and executed when maven needs it.
+         The maven surefire plugin has only one goal defined:
+         test: Allow us to run the unit tests of the application
+         There is no need to define that goal inside pom.xml, as we said before, maven will invoke that goal when
+         the maven lifecycle have to run the unit tests. -->
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-surefire-plugin</artifactId>
+      <version>${maven-surefire-plugin.version}</version>
+      <configuration>
+        <!-- run unit tests with utf8 encoding -->
+        <argLine>-Dfile.encoding=UTF-8</argLine>
+        <!-- Set this to true to skip running tests, but still compile them. -->
+        <skipTests>${skipUTs}</skipTests>
+      </configuration>
+    </plugin>
+
+    <!-- maven-failsafe-plugin is designed for running integration tests, and decouples failing the build if
+         there are test failures from actually running the tests. -->
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-failsafe-plugin</artifactId>
+      <version>${maven-failsafe-plugin.version}</version>
+      <configuration>
+        <!-- run unit tests with utf8 encoding -->
+        <argLine>-Dfile.encoding=UTF-8</argLine>
+        <!-- Set this to true to skip integration tests. -->
+        <skipTests>${skipITs}</skipTests>
+      </configuration>
+      <executions>
+        <execution>
+          <goals>
+            <goal>integration-test</goal>
+            <goal>verify</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+
+    </plugins>
+
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
         <plugin>
